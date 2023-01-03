@@ -48,7 +48,8 @@ public class TradingMachine {
                 while (request.Cryptos != 0 && lowestSell != null && request.limitPrice >= lowestSell.limitPrice) {
                     if (lowestSell.totalVolume <= request.Cryptos) {
                         limitTree.deleteLimit(lowestSell);
-                        // request.Cryptos = request.Cryptos - lowestSell.totalVolume;
+                        double oldReqCryptos = request.Cryptos;
+                        request.Cryptos = request.Cryptos - lowestSell.totalVolume;
 //                        System.out.println("**** Sell *****");
 //                        System.out.println("Price: " + request.limitPrice);
 //                        System.out.println("Order Price: " + lowestSell.limitPrice);
@@ -59,10 +60,12 @@ public class TradingMachine {
                             response.sellId = o.id;
                             response.buyPrice = request.limitPrice;
                             response.sellPrice = lowestSell.limitPrice;
-                            response.buyCryptoRemaining = request.Cryptos - o.cryptos;
-                            response.sellCryptoRemaing = 0;
+                            response.buyCryptoRemaining = oldReqCryptos - o.cryptos;
+                            response.sellCryptoRemaing = 0; // to be checked
+                            response.crptosExchange = Math.min(oldReqCryptos, o.cryptos);
                             
                             responses.add(response);
+                            oldReqCryptos = oldReqCryptos - o.cryptos;
                         }
                         lowestSell = limitTree.getSmallestLimit();
                     } else {
@@ -70,6 +73,7 @@ public class TradingMachine {
                         int isOrderEmpty = 1;
                         while (request.Cryptos > 0) {
                             Order order = orderList.getHead();
+                            double oldReqCryptos = request.Cryptos;
                             if (order.cryptos <= request.Cryptos) {
                                 isOrderEmpty = orderList.deleteOrder(order);
                                 request.Cryptos = request.Cryptos - order.cryptos;
@@ -88,8 +92,10 @@ public class TradingMachine {
                             response.sellId = order.id;
                             response.buyPrice = request.limitPrice;
                             response.sellPrice = lowestSell.limitPrice;
-                            response.buyCryptoRemaining = request.Cryptos;
-                            response.sellCryptoRemaing = 0;
+                            response.buyCryptoRemaining = 0;
+                            response.sellCryptoRemaing = order.cryptos;
+                            response.crptosExchange = Math.min(oldReqCryptos, order.cryptos);
+                            
                             responses.add(response);
                             if(isOrderEmpty == 0) {
                                 limitTree.deleteLimit(lowestSell);
@@ -109,7 +115,8 @@ public class TradingMachine {
                 while (request.Cryptos != 0 && highestBuy != null && request.limitPrice <= highestBuy.limitPrice) {
                     if (highestBuy.totalVolume <= request.Cryptos) {
                         limitTree.deleteLimit(highestBuy);
-                        // request.Cryptos = request.Cryptos - lowestSell.totalVolume;
+                        double oldReqCryptos = request.Cryptos;
+                        request.Cryptos = request.Cryptos - highestBuy.totalVolume;
 //                        System.out.println("**** Buy *****");
 //                        System.out.println("Price: " + request.limitPrice);
 //                        System.out.println("Order Price: " + highestBuy.limitPrice);
@@ -120,16 +127,19 @@ public class TradingMachine {
                             response.sellId = request.RequestId;
                             response.buyPrice = highestBuy.limitPrice;
                             response.sellPrice = request.limitPrice;
-                            response.buyCryptoRemaining = 0;
-                            response.sellCryptoRemaing = request.Cryptos - o.cryptos;
+                            response.buyCryptoRemaining = 0; // to be checked
+                            response.sellCryptoRemaing = oldReqCryptos - o.cryptos;
+                            response.crptosExchange = Math.min(oldReqCryptos, o.cryptos);
                             
                             responses.add(response);
+                            oldReqCryptos = oldReqCryptos - o.cryptos;
                         }
                         highestBuy = limitTree.getHighestLimit();
                     } else {
                         OrderList orderList = highestBuy.order;
                         while (request.Cryptos > 0) {
                             Order order = orderList.getHead();
+                            double oldReqCryptos = request.Cryptos;
                             int isOrderEmpty = 1;
                             if (order.cryptos <= request.Cryptos) {
                                 isOrderEmpty = orderList.deleteOrder(order);
@@ -149,8 +159,10 @@ public class TradingMachine {
                             response.sellId = request.RequestId;
                             response.buyPrice = highestBuy.limitPrice;
                             response.sellPrice = request.limitPrice;
-                            response.buyCryptoRemaining = 0;
-                            response.sellCryptoRemaing = request.Cryptos;
+                            response.buyCryptoRemaining = order.cryptos;
+                            response.sellCryptoRemaing = 0;
+                            response.crptosExchange = Math.min(oldReqCryptos, order.cryptos);
+                            
                             responses.add(response);
                             if(isOrderEmpty == 0) {
                                 limitTree.deleteLimit(highestBuy);
@@ -165,7 +177,7 @@ public class TradingMachine {
         }
         return responses;
     }
-
+    
     public void addToQueue(Request request, Book book) {
         Limit limit;
         if (request.buyOrSell) {
