@@ -67,4 +67,17 @@ public class OrderList {
         }
         return orders;
     }
+    
+    public int deleteByOrderId(String id) {
+        Order temp = headOrder;
+        while(temp != null) {
+            if(temp.id.equals(id)) {
+                break;
+            }
+        }
+        if(temp != null) {
+            return deleteOrder(temp);
+        }
+        return 1;
+    }
 }

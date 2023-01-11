@@ -222,4 +222,23 @@ public class TradingMachine {
         order.parentLimit = limit;
         limit.order.insertOrder(order);
     }
+    
+    public void cancelOrder(Request cancelRequest) {
+        HashMap<Double, Limit> treeMap;
+        LimitTree limitTree;
+        if(cancelRequest.buyOrSell) {
+            treeMap = bookMap.get(cancelRequest.pairSymbol).buyTreeMap;
+            limitTree = bookMap.get(cancelRequest.pairSymbol).buyTree;
+        } else {
+            treeMap = bookMap.get(cancelRequest.pairSymbol).sellTreeMap;
+            limitTree = bookMap.get(cancelRequest.pairSymbol).sellTree;
+        }
+        
+        Limit limit = treeMap.get(cancelRequest.limitPrice);
+        int isOrderEmpty = limit.order.deleteByOrderId(cancelRequest.RequestId);
+        if(isOrderEmpty == 0) 
+        {
+            limitTree.deleteLimit(limit);
+        }
+    }
 }

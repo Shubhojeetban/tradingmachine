@@ -25,4 +25,14 @@ public class CryptoController {
 	public ResponseEntity<List<Response>> postRequest(@RequestBody Request request) {
 		return ResponseEntity.status(HttpStatus.OK).body(tradingMachine.addRequest(request));
 	}
+	
+	@PostMapping("/cancelorder")
+	public ResponseEntity<String> deleteRequest(@RequestBody Request cancelRequest) {
+		try {
+			tradingMachine.cancelOrder(cancelRequest);
+			return ResponseEntity.status(HttpStatus.OK).body("Order deleted");
+		} catch (Exception e) {
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Order id: "+cancelRequest.RequestId+" deletion failed! "+e.getMessage());
+		}
+	}
 }
